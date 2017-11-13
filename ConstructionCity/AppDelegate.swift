@@ -7,16 +7,76 @@
 //
 
 import UIKit
+import Firebase
+import FirebaseCore
+import FirebaseStorage
+import FirebaseAuth
+import FirebaseDatabase
+import FBSDKCoreKit
+import IQKeyboardManagerSwift
+import FirebaseDynamicLinks
+import Fabric
+import Crashlytics
 
+
+let storageRef = Storage.storage().reference()
+let databaseRef = Database.database().reference()
+//let DeepLinking_url = "https://d5q2p.app.goo.gl/"
 @UIApplicationMain
-class AppDelegate: UIResponder, UIApplicationDelegate {
+class AppDelegate: UIResponder, UIApplicationDelegate  {
 
     var window: UIWindow?
-
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+    
+        IQKeyboardManager.sharedManager().enable = true
+       
+
+
+        FirebaseOptions.defaultOptions()?.deepLinkURLScheme = "AppOnDynamicLink"
+        FirebaseApp.configure()
+        Fabric.with([Crashlytics.self])
+        Fabric.sharedSDK().debug = true
+        Auth.auth().signInAnonymously(completion: { (user, err) in
+            
+            if err != nil {
+                
+                print(err?.localizedDescription ?? "")
+                return
+            } else {
+                
+                //print(user!)
+                //print(user!.uid)
+            }
+
+        })
+        FBSDKApplicationDelegate.sharedInstance().application(application, didFinishLaunchingWithOptions: launchOptions)
+
         return true
+    }
+ 
+    func exceptionHandler(exception : NSException) {
+        print(exception)
+        print(exception.callStackSymbols)
+    }
+
+    
+    
+
+    func application(_ application: UIApplication, continue userActivity: NSUserActivity, restorationHandler: @escaping ([Any]?) -> Void) -> Bool {
+        guard let dynamicLinks = DynamicLinks.dynamicLinks() else {
+            return false
+        }
+        
+        let handled = dynamicLinks.handleUniversalLink(userActivity.webpageURL!) { (dynamiclink, error) in
+            // ...
+        }
+        
+        
+        return handled
+    }
+    func handleDynamicLink(_ dynamicLink: DynamicLink) {
+        print("Your Dynamic Link parameter: \(dynamicLink)")
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
@@ -39,6 +99,19 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+    }
+    func application(_ application: UIApplication, open url: URL, sourceApplication: String?, annotation: Any) -> Bool {
+       
+        
+         let facebookDidHandle = FBSDKApplicationDelegate.sharedInstance().application(application, open: url, sourceApplication: sourceApplication, annotation: annotation)
+    
+        
+        
+        return  facebookDidHandle
+        
+        
+
+        //        return googleDidHandle
     }
 
 
